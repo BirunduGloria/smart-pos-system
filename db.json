@@ -1,0 +1,41 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Blue T-Shirt",
+      "category": "Clothing",
+      "priceUSD": 15,
+      "priceKES": 2000,
+      "stock": 5,
+      "onOffer": true,
+      "isFastSelling": false,
+      "expiryDate": "2025-08-15"
+    },
+    {
+      "id": 2,
+      "name": "Toothpaste",
+      "category": "Personal Care",
+      "priceUSD": 3,
+      "priceKES": 400,
+      "stock": 2,
+      "onOffer": false,
+      "isFastSelling": true,
+      "expiryDate": "2025-07-30"
+    }
+  ],
+  "sales": [],
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "admin123",
+      "role": "admin"
+    },
+    {
+      "id": 2,
+      "username": "customer",
+      "password": "cust123",
+      "role": "customer"
+    }
+  ]
+}
