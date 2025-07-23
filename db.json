@@ -13,5 +13,14 @@
       "quantity": 1
     }
   ],
-  "sales": []
+  "sales": [
+    {
+      "id": 1,
+      "items": [
+        { "id": 101, "name": "Product A", "price": 50, "quantity": 2, "currency": "USD" },
+        { "id": 102, "name": "Product B", "price": 30, "quantity": 1, "currency": "USD" }
+      ],
+      "date": "2025-07-22T10:00:00Z"
+    }
+  ]
 }
