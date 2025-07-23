@@ -1,5 +1,6 @@
 import { useState, useContext } from 'react';
-import { useRouter } from 'next/router';
+{/*import { useRouter } from 'next/router';*/}
+import { useRouter } from 'next/navigation'; 
 import { UserContext } from '../../context/UserContext';
 
 function SignupForm() {
