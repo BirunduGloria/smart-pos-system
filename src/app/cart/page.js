@@ -1,182 +1,140 @@
 'use client';
-
-import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+
+const API_BASE = 'http://localhost:3005';
 
 export default function CartPage() {
   const [cart, setCart] = useState([]);
-  const [currency, setCurrency] = useState('KES');
+  const [currency, setCurrency] = useState('USD');
   const [sales, setSales] = useState([]);
 
-  const currencyRates = {
-    KES: 1,
-    USD: 0.007, // adjust as needed
-  };
-
-  // 🧠 Fetch cart items from your json-server
   useEffect(() => {
-    axios.get('http://localhost:3001/cart')
-      .then(res => setCart(res.data))
-      .catch(err => console.error('Error loading cart:', err));
-
-    axios.get('http://localhost:3001/sales')
-      .then(res => setSales(res.data))
-      .catch(err => console.error('Error loading sales:', err));
+    axios.get(`${API_BASE}/cart`).then((res) => setCart(res.data));
+    axios.get(`${API_BASE}/sales`).then((res) => setSales(res.data));
   }, []);
 
-  // 💡 Handle quantity change
-  function handleQuantityChange(id, quantity) {
-    const updated = cart.map(item =>
-      item.id === id ? { ...item, quantity } : item
-    );
-    setCart(updated);
+  const handleQuantityChange = (id, newQty) => {
+    const item = cart.find((i) => i.id === id);
+    if (!item) return;
+    const updated = { ...item, quantity: newQty };
 
-    axios.patch(`http://localhost:3001/cart/${id}`, { quantity })
-      .catch(err => console.error('Error updating quantity:', err));
-  }
+    axios.patch(`${API_BASE}/cart/${id}`, updated).then(() => {
+      setCart((prev) =>
+        prev.map((i) => (i.id === id ? updated : i))
+      );
+    });
+  };
 
-  // ❌ Remove item from cart
-  function handleRemove(id) {
-    const updated = cart.filter(item => item.id !== id);
-    setCart(updated);
+  const handleRemove = (id) => {
+    axios.delete(`${API_BASE}/cart/${id}`).then(() => {
+      setCart((prev) => prev.filter((i) => i.id !== id));
+    });
+  };
 
-    axios.delete(`http://localhost:3001/cart/${id}`)
-      .catch(err => console.error('Error removing item:', err));
-  }
-
-  // ✅ Calculate total
-  const total = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  ) * currencyRates[currency];
-
-  // 🛒 Checkout (submit to /sales)
-  function handleCheckout() {
-    if (cart.length === 0) return alert('Cart is empty');
-
+  const handleCheckout = () => {
+    if (cart.length === 0) return alert('Cart is empty!');
     const sale = {
       date: new Date().toISOString(),
       items: cart,
-      total,
+      total: getTotal(),
       currency,
     };
-
-    axios.post('http://localhost:3001/sales', sale)
-      .then(() => {
-        alert('Checkout successful!');
-        setCart([]);
-
-        // Clear cart from backend
-        cart.forEach(item =>
-          axios.delete(`http://localhost:3001/cart/${item.id}`)
-        );
-      })
-      .catch(err => console.error('Checkout error:', err));
-  }
-
-  // 🔁 Reorder past sale
-  function handleReorder(sale) {
-    sale.items.forEach(item => {
-      axios.post('http://localhost:3001/cart', item)
-        .then(() => alert('Reorder added to cart!'))
-        .catch(err => console.error('Reorder error:', err));
+    axios.post(`${API_BASE}/sales`, sale).then(() => {
+      Promise.all(cart.map((item) =>
+        axios.delete(`${API_BASE}/cart/${item.id}`)
+      )).then(() => setCart([]));
     });
-  }
+  };
+
+  const handleReorder = (items) => {
+    items.forEach((item) => {
+      axios.post(`${API_BASE}/cart`, { ...item });
+    });
+    setTimeout(() => {
+      axios.get(`${API_BASE}/cart`).then((res) => setCart(res.data));
+    }, 300);
+  };
+
+  const getTotal = () => {
+    return cart.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2);
+  };
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Cart</h1>
-
-      <div className="mb-4">
-        <label className="mr-2 font-medium">Currency:</label>
-        <select
-          value={currency}
-          onChange={e => setCurrency(e.target.value)}
-          className="border p-1 rounded"
-        >
-          <option value="KES">KES</option>
-          <option value="USD">USD</option>
-        </select>
-      </div>
+      <h2 className="text-xl font-bold mb-4">🛒 Your Cart</h2>
 
       {cart.length === 0 ? (
-        <p className="text-gray-500">Your cart is empty.</p>
+        <p className="text-gray-600">Your cart is empty.</p>
       ) : (
-        <table className="w-full border mb-6">
-          <thead>
-            <tr className="bg-gray-100 text-left">
-              <th className="p-2">Item</th>
-              <th className="p-2">Qty</th>
-              <th className="p-2">Subtotal ({currency})</th>
-              <th className="p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cart.map(item => (
-              <tr key={item.id} className="border-t">
-                <td className="p-2">{item.name}</td>
-                <td className="p-2">
-                  <input
-                    type="number"
-                    value={item.quantity}
-                    onChange={e => handleQuantityChange(item.id, parseInt(e.target.value))}
-                    className="w-16 border p-1"
-                    min={1}
-                  />
-                </td>
-                <td className="p-2">
-                  {(item.price * item.quantity * currencyRates[currency]).toFixed(2)}
-                </td>
-                <td className="p-2">
-                  <button
-                    onClick={() => handleRemove(item.id)}
-                    className="bg-red-500 text-white px-2 py-1 rounded"
-                  >
-                    Remove
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {cart.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold">
-            Total: {total.toFixed(2)} {currency}
-          </h2>
-          <button
-            onClick={handleCheckout}
-            className="mt-2 bg-green-600 text-white px-4 py-2 rounded"
-          >
-            Checkout
-          </button>
+        <div>
+          {cart.map((item) => (
+            <div key={item.id} className="border-b py-2 flex justify-between items-center">
+              <div>
+                <p className="font-medium">{item.name}</p>
+                <p>
+                  {item.currency} {item.price.toFixed(2)} x {item.quantity} ={" "}
+                  <strong>{item.currency} {(item.price * item.quantity).toFixed(2)}</strong>
+                </p>
+              </div>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="number"
+                  min="1"
+                  value={item.quantity}
+                  onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value))}
+                  className="w-16 border px-2 py-1 rounded"
+                />
+                <button
+                  onClick={() => handleRemove(item.id)}
+                  className="text-red-500 hover:underline"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ))}
+          <div className="mt-4 text-right">
+            <p className="text-lg font-semibold">
+              Total: {currency} {getTotal()}
+            </p>
+            <button
+              onClick={handleCheckout}
+              className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            >
+              Checkout
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Past Sales */}
-      <div>
-        <h2 className="text-xl font-bold mt-10 mb-4">Past Purchases</h2>
-        {sales.length === 0 ? (
-          <p className="text-gray-500">No purchases yet.</p>
-        ) : (
-          <ul className="space-y-4">
-            {sales.map(sale => (
-              <li key={sale.id} className="border p-4 rounded shadow-sm">
-                <p className="mb-2 font-medium">Date: {new Date(sale.date).toLocaleString()}</p>
-                <p className="mb-2">Total: {sale.total.toFixed(2)} {sale.currency}</p>
-                <button
-                  onClick={() => handleReorder(sale)}
-                  className="bg-blue-500 text-white px-3 py-1 rounded"
-                >
-                  Reorder
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <hr className="my-6" />
+      <h3 className="text-lg font-bold mb-2">🧾 Past Purchases</h3>
+      {sales.length === 0 ? (
+        <p className="text-gray-500">No past purchases yet.</p>
+      ) : (
+        sales.map((sale) => (
+          <div key={sale.id} className="border rounded p-4 mb-3">
+            <p className="text-sm text-gray-500">Date: {new Date(sale.date).toLocaleString()}</p>
+            <ul className="list-disc ml-5">
+              {sale.items.map((item, idx) => (
+                <li key={idx}>
+                  {item.name} x {item.quantity} — {item.currency} {item.price.toFixed(2)}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-1 font-medium">
+              Total: {sale.currency} {sale.total}
+            </p>
+            <button
+              onClick={() => handleReorder(sale.items)}
+              className="mt-2 text-blue-600 hover:underline"
+            >
+              Reorder
+            </button>
+          </div>
+        ))
+      )}
     </div>
   );
 }
