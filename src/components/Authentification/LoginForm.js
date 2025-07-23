@@ -2,9 +2,9 @@ import { useState, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserContext } from '../../context/UserContext';
 
-
 function LoginForm() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [role, setRole] = useState('user');
   const router = useRouter();
   const { setUser } = useContext(UserContext);
@@ -12,7 +12,7 @@ function LoginForm() {
   const handleLogin = (e) => {
     e.preventDefault();
 
-    const loggedInUser = { username, role };
+    const loggedInUser = { email, role };
     localStorage.setItem('user', JSON.stringify(loggedInUser));
     setUser(loggedInUser);
 
@@ -22,10 +22,19 @@ function LoginForm() {
   return (
     <form onSubmit={handleLogin} className="flex flex-col gap-4 w-72">
       <input
-        type="text"
-        placeholder="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+        className="border p-2 rounded"
+      />
+
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
         required
         className="border p-2 rounded"
       />
