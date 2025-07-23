@@ -1,39 +1,13 @@
-'use client'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import Link from 'next/link';
 
-const NavBar = () => {
-  const pathname = usePathname()
-
-  const navItems = [
-    { name: 'Home', path: '/home' },
-    { name: 'Products', path: '/products' },
-    { name: 'Cart', path: '/cart' },
-    { name: 'Login', path: '/login' },
-    { name: 'Inventory', path: '/inventory' }, // Only show if admin
-  ]
-
+export default function NavBar() {
   return (
-    <nav className="bg-green-700 text-white shadow-md">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-        <h1 className="text-xl font-bold">Smart POS</h1>
-        <ul className="flex space-x-6">
-          {navItems.map((item) => (
-            <li key={item.path}>
-              <Link
-                href={item.path}
-                className={`hover:underline ${
-                  pathname === item.path ? 'font-semibold underline' : ''
-                }`}
-              >
-                {item.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
+    <nav className="flex space-x-6 p-4 bg-white shadow text-lg">
+      <Link href="/" className="hover:text-green-600 font-medium">Home</Link>
+      <Link href="/products" className="hover:text-green-600 font-medium">Products</Link>
+      <Link href="/cart" className="hover:text-green-600 font-medium">Cart</Link>
+      <Link href="/login" className="hover:text-green-600 font-medium">Login</Link>
+      <Link href="/inventory" className="hover:text-green-600 font-medium">Inventory</Link>
     </nav>
-  )
+  );
 }
-
-export default NavBar
