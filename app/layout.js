@@ -1,14 +1,13 @@
-// app/layout.js
-export const metadata = {
-  title: "Smart POS System",
-  description: "Next.js + Tailwind Smart POS",
-};
+import './globals.css';
+import { CartProvider } from '../context/CartContext';
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="bg-gray-100 text-gray-900">
-        {children}
+      <body>
+        <CartProvider>
+          {children}
+        </CartProvider>
       </body>
     </html>
   );
