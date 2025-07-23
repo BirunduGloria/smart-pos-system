@@ -1,4 +1,4 @@
-// app/layout.js
+
 export const metadata = {
   title: "Smart POS System",
   description: "Next.js + Tailwind Smart POS",
